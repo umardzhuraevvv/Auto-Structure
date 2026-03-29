@@ -13,21 +13,40 @@ body {
 }
 
 .react-flow__edge-path {
-  stroke: #94a3b8;
-  stroke-width: 2;
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-width 0.2s, opacity 0.2s;
+}
+
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke-width: 5;
+  opacity: 1 !important;
+  filter: brightness(1.1);
 }
 
 .react-flow__controls {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
   border: 1px solid #e2e8f0;
+  overflow: hidden;
 }
 
 .react-flow__controls-button {
   border: none !important;
   background: white !important;
+  width: 32px;
+  height: 32px;
 }
 
 .react-flow__controls-button:hover {
   background: #f1f5f9 !important;
+}
+
+.react-flow__node:focus,
+.react-flow__node:focus-visible {
+  outline: none;
+}
+
+.react-flow__background {
+  opacity: 0.5;
 }

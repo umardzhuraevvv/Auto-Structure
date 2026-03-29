@@ -9,12 +9,20 @@ import {
   ReactFlowProvider,
   type Node,
   type Edge,
+  BackgroundVariant,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { EmployeeCard } from './EmployeeCard';
 import type { Employee } from '../types';
 
 const nodeTypes = { employee: EmployeeCard };
+
+const DEPT_EDGE_COLORS: Record<string, string> = {
+  'Руководство': '#8b5cf6',
+  'Коммерческий отдел': '#3b82f6',
+  'Модерация и Суппорт': '#10b981',
+  'Финансовый Отдел': '#f59e0b',
+};
 
 interface Props {
   employees: Employee[];
@@ -57,10 +65,10 @@ function layoutTree(
 
   roots.forEach((r) => collectVisible(r.id));
 
-  const NODE_W = isMobile ? 160 : 240;
-  const NODE_H = isMobile ? 90 : 110;
-  const H_GAP = isMobile ? 20 : 40;
-  const V_GAP = isMobile ? 40 : 60;
+  const NODE_W = isMobile ? 180 : 280;
+  const NODE_H = isMobile ? 100 : 130;
+  const H_GAP = isMobile ? 16 : 30;
+  const V_GAP = isMobile ? 50 : 80;
 
   const subtreeWidths = new Map<number, number>();
 
@@ -111,12 +119,13 @@ function layoutTree(
     });
 
     if (emp.managerId && visibleIds.has(emp.managerId)) {
+      const edgeColor = DEPT_EDGE_COLORS[emp.department] || '#94a3b8';
       edges.push({
         id: `e-${emp.managerId}-${empId}`,
         source: String(emp.managerId),
         target: String(empId),
         type: 'smoothstep',
-        style: { stroke: '#94a3b8', strokeWidth: 2 },
+        style: { stroke: edgeColor, strokeWidth: 3, opacity: 0.7 },
       });
     }
 
@@ -151,7 +160,35 @@ function layoutTree(
 }
 
 function OrgTreeInner({ employees, highlightedId, onNodeClick, deptFilter }: Props) {
-  const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
+  const [collapsed, setCollapsed] = useState<Set<number>>(() => {
+    // Auto-collapse nodes at depth >= 2 for compact initial view
+    const depths = new Map<number, number>();
+    const empMap = new Map(employees.map((e) => [e.id, e]));
+
+    function calcDepth(id: number): number {
+      if (depths.has(id)) return depths.get(id)!;
+      const emp = empMap.get(id);
+      if (!emp || !emp.managerId) {
+        depths.set(id, 0);
+        return 0;
+      }
+      const d = calcDepth(emp.managerId) + 1;
+      depths.set(id, d);
+      return d;
+    }
+
+    employees.forEach((e) => calcDepth(e.id));
+
+    const autoCollapsed = new Set<number>();
+    employees.forEach((e) => {
+      const hasChildren = employees.some((c) => c.managerId === e.id);
+      if (hasChildren && (depths.get(e.id) || 0) >= 2) {
+        autoCollapsed.add(e.id);
+      }
+    });
+    return autoCollapsed;
+  });
+
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { fitView } = useReactFlow();
 
@@ -170,6 +207,17 @@ function OrgTreeInner({ employees, highlightedId, onNodeClick, deptFilter }: Pro
     });
   }, []);
 
+  const expandAll = useCallback(() => setCollapsed(new Set()), []);
+  const collapseAll = useCallback(() => {
+    const allParents = new Set<number>();
+    employees.forEach((e) => {
+      if (employees.some((c) => c.managerId === e.id)) {
+        allParents.add(e.id);
+      }
+    });
+    setCollapsed(allParents);
+  }, [employees]);
+
   const { nodes: layoutNodes, edges: layoutEdges } = useMemo(
     () => layoutTree(employees, collapsed, highlightedId, handleToggle, onNodeClick, deptFilter, isMobile),
     [employees, collapsed, highlightedId, handleToggle, onNodeClick, deptFilter, isMobile]
@@ -181,34 +229,50 @@ function OrgTreeInner({ employees, highlightedId, onNodeClick, deptFilter }: Pro
   useEffect(() => {
     setNodes(layoutNodes);
     setEdges(layoutEdges);
-    setTimeout(() => fitView({ padding: 0.2, duration: 300 }), 50);
+    setTimeout(() => fitView({ padding: 0.3, maxZoom: 1.0, duration: 300 }), 50);
   }, [layoutNodes, layoutEdges, setNodes, setEdges, fitView]);
 
   useEffect(() => {
     if (highlightedId) {
       const node = nodes.find((n) => n.id === String(highlightedId));
       if (node) {
-        setTimeout(() => fitView({ nodes: [node], padding: 1, duration: 500 }), 100);
+        setTimeout(() => fitView({ nodes: [node], padding: 0.8, maxZoom: 1.0, duration: 500 }), 100);
       }
     }
   }, [highlightedId, nodes, fitView]);
 
   return (
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      nodeTypes={nodeTypes}
-      fitView
-      fitViewOptions={{ padding: 0.2 }}
-      minZoom={0.1}
-      maxZoom={2}
-      proOptions={{ hideAttribution: true }}
-    >
-      <Background color="#e2e8f0" gap={20} size={1} />
-      <Controls showInteractive={false} />
-    </ReactFlow>
+    <div className="relative w-full h-full">
+      <div className="absolute top-3 right-3 z-10 flex gap-2">
+        <button
+          onClick={expandAll}
+          className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-50 shadow-sm transition-colors"
+        >
+          Развернуть все
+        </button>
+        <button
+          onClick={collapseAll}
+          className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-50 shadow-sm transition-colors"
+        >
+          Свернуть все
+        </button>
+      </div>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        nodeTypes={nodeTypes}
+        fitView
+        fitViewOptions={{ padding: 0.3, maxZoom: 1.0 }}
+        minZoom={0.2}
+        maxZoom={1.5}
+        proOptions={{ hideAttribution: true }}
+      >
+        <Background color="#e2e8f0" gap={24} size={1} variant={BackgroundVariant.Dots} />
+        <Controls showInteractive={false} position="bottom-right" />
+      </ReactFlow>
+    </div>
   );
 }
 

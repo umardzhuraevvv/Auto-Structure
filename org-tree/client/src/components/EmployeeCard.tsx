@@ -28,31 +28,34 @@ export const EmployeeCard = memo(({ data }: Props) => {
   return (
     <div
       className={`
-        bg-white rounded-xl shadow-md border-2 transition-all duration-200 cursor-pointer
-        hover:shadow-lg hover:scale-[1.02]
-        min-w-[140px] md:min-w-[200px] max-w-[180px] md:max-w-[240px]
-        ${data.highlighted ? 'ring-4 ring-yellow-400 border-yellow-400' : 'border-gray-100'}
+        bg-white rounded-xl border-2 transition-all duration-200 cursor-pointer
+        hover:shadow-xl hover:scale-[1.02] hover:-translate-y-0.5
+        w-[180px] md:w-[280px]
+        ${data.highlighted
+          ? 'ring-4 ring-yellow-400 border-yellow-400 shadow-lg shadow-yellow-100'
+          : 'border-gray-200 shadow-md'
+        }
       `}
       onClick={data.onClick}
     >
-      <Handle type="target" position={Position.Top} className="!bg-gray-300 !w-2 !h-2 !border-0" />
+      <Handle type="target" position={Position.Top} className="!bg-transparent !w-3 !h-3 !border-2 !border-gray-300 !-top-1.5" />
 
-      <div className="rounded-t-xl h-1 md:h-1.5" style={{ background: color }} />
+      <div className="rounded-t-[10px] h-1.5 md:h-2" style={{ background: color }} />
 
-      <div className="p-2 md:p-3">
-        <div className="flex items-start gap-1.5 md:gap-2">
+      <div className="p-2.5 md:p-3.5">
+        <div className="flex items-start gap-2 md:gap-2.5">
           <div
-            className="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-            style={{ background: color + '20', color }}
+            className="w-7 h-7 md:w-9 md:h-9 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: color + '18', color }}
           >
             <User size={14} className="md:hidden" />
-            <User size={16} className="hidden md:block" />
+            <User size={18} className="hidden md:block" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-semibold text-xs md:text-sm text-gray-900 leading-tight truncate">
+            <p className="font-bold text-[11px] md:text-[13px] text-gray-900 leading-snug break-words line-clamp-2">
               {data.fullName}
             </p>
-            <p className="text-[10px] md:text-xs text-gray-500 mt-0.5 leading-tight line-clamp-2">
+            <p className="text-[9px] md:text-[11px] text-gray-500 mt-0.5 leading-snug line-clamp-2">
               {data.position}
             </p>
           </div>
@@ -62,21 +65,27 @@ export const EmployeeCard = memo(({ data }: Props) => {
                 e.stopPropagation();
                 data.onToggle();
               }}
-              className="p-0.5 rounded hover:bg-gray-100 flex-shrink-0 mt-0.5"
+              className="w-5 h-5 md:w-6 md:h-6 rounded-md flex items-center justify-center hover:bg-gray-100 flex-shrink-0 mt-0.5 transition-colors"
+              style={{ color }}
             >
               {data.collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
             </button>
           )}
         </div>
+
         <div
-          className="mt-1.5 md:mt-2 text-[9px] md:text-[10px] font-medium px-1.5 md:px-2 py-0.5 rounded-full inline-block text-white"
-          style={{ background: color }}
+          className="mt-2 md:mt-2.5 text-[8px] md:text-[10px] font-semibold px-2 md:px-2.5 py-0.5 md:py-1 rounded-md inline-block tracking-wide"
+          style={{
+            background: color + '15',
+            color: color,
+            border: `1px solid ${color}30`,
+          }}
         >
           {data.department}
         </div>
       </div>
 
-      <Handle type="source" position={Position.Bottom} className="!bg-gray-300 !w-2 !h-2 !border-0" />
+      <Handle type="source" position={Position.Bottom} className="!bg-transparent !w-3 !h-3 !border-2 !border-gray-300 !-bottom-1.5" />
     </div>
   );
 });
