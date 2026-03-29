@@ -312,6 +312,11 @@ async function main() {
     });
   }
 
+  // Reset PostgreSQL sequence after inserting with explicit IDs
+  await prisma.$executeRawUnsafe(
+    `SELECT setval('"Employee_id_seq"', (SELECT COALESCE(MAX(id), 0) FROM "Employee"))`
+  );
+
   console.log(`Seeded ${employees.length} employees`);
   console.log('Done!');
   console.log('\nAdmin login: admin@uzumauto.uz / admin123');
