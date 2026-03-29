@@ -1,0 +1,22 @@
+{
+  "name": "org-tree",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npx tsx watch src/index.ts",
+    "dev:client": "cd client && npx vite",
+    "db:setup": "cd server && npx prisma migrate dev --name init && npx tsx src/seed.ts",
+    "db:seed": "cd server && npx tsx src/seed.ts",
+    "build": "cd client && npm run build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "tsx": "^4.7.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.5.0",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.3.1"
+  }
+}
