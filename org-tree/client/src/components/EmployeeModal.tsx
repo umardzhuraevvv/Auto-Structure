@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Edit3, Save, ArrowRightLeft, Trash2, UserCircle } from 'lucide-react';
+import { X, Edit3, Save, ArrowRightLeft, Trash2, UserCircle, Users } from 'lucide-react';
 import type { Employee, User } from '../types';
 import { api } from '../services/api';
 
@@ -62,9 +62,26 @@ export function EmployeeModal({ employee, allEmployees, user, onClose, onUpdate,
     }
   };
 
+  const handleDeleteBranch = async () => {
+    const countDescendants = (id: number): number => {
+      const children = allEmployees.filter((e) => e.managerId === id);
+      return children.reduce((sum, c) => sum + 1 + countDescendants(c.id), 0);
+    };
+    const total = countDescendants(employee.id);
+    if (!confirm(`Удалить ${employee.fullName} и всех подчинённых (${total} чел.)?`)) return;
+    try {
+      await api.deleteBranch(employee.id);
+      onClose();
+      onUpdate();
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
+
   const dutiesList = (employee.duties || '').split('\n').filter((d) => d.trim());
   const subordinates = allEmployees.filter((e) => e.managerId === employee.id);
   const manager = allEmployees.find((e) => e.id === employee.managerId);
+  const hasAnySubordinates = subordinates.length > 0;
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-end md:items-center justify-center md:p-4" onClick={onClose}>
@@ -235,6 +252,14 @@ export function EmployeeModal({ employee, allEmployees, user, onClose, onUpdate,
                 className="flex items-center justify-center gap-1.5 px-4 py-2.5 md:py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600"
               >
                 <Trash2 size={14} /> Удалить
+              </button>
+            )}
+            {canDelete && hasAnySubordinates && (
+              <button
+                onClick={handleDeleteBranch}
+                className="flex items-center justify-center gap-1.5 px-4 py-2.5 md:py-2 bg-red-700 text-white rounded-lg text-sm font-medium hover:bg-red-800"
+              >
+                <Users size={14} /> Удалить с подчинёнными
               </button>
             )}
           </div>

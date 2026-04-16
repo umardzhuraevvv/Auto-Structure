@@ -114,6 +114,39 @@ router.patch('/:id/move', authenticate, requireRole('ADMIN', 'EDITOR'), async (r
   res.json(employee);
 });
 
+// Delete employee with entire branch (ADMIN only)
+router.delete('/:id/branch', authenticate, requireRole('ADMIN'), async (req: AuthRequest, res: Response) => {
+  const id = Number(req.params.id);
+  const existing = await prisma.employee.findUnique({ where: { id } });
+  if (!existing) return res.status(404).json({ error: 'Сотрудник не найден' });
+
+  // Recursively collect all descendant IDs
+  const allIds: number[] = [];
+  async function collectDescendants(parentId: number) {
+    const children = await prisma.employee.findMany({ where: { managerId: parentId }, select: { id: true } });
+    for (const child of children) {
+      allIds.push(child.id);
+      await collectDescendants(child.id);
+    }
+  }
+  await collectDescendants(id);
+  allIds.push(id);
+
+  await prisma.$transaction([
+    prisma.employee.deleteMany({ where: { id: { in: allIds } } }),
+    prisma.auditLog.create({
+      data: {
+        userId: req.user!.id,
+        action: 'DELETE',
+        target: existing.fullName,
+        details: `Удалена ветка: ${allIds.length} сотрудник(ов)`,
+      },
+    }),
+  ]);
+
+  res.json({ ok: true, count: allIds.length });
+});
+
 // Delete employee (ADMIN only)
 router.delete('/:id', authenticate, requireRole('ADMIN'), async (req: AuthRequest, res: Response) => {
   const id = Number(req.params.id);

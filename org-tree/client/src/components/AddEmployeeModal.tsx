@@ -3,28 +3,43 @@ import { X, UserPlus } from 'lucide-react';
 import { api } from '../services/api';
 import type { Employee } from '../types';
 
+const DEFAULT_DEPARTMENTS = [
+  'Руководство',
+  'Коммерческий отдел',
+  'Модерация и Суппорт',
+  'Финансовый Отдел',
+];
+
 interface Props {
   allEmployees: Employee[];
   onClose: () => void;
   onCreated: () => void;
+  customDepartmentMode?: boolean;
 }
 
-export function AddEmployeeModal({ allEmployees, onClose, onCreated }: Props) {
+export function AddEmployeeModal({ allEmployees, onClose, onCreated, customDepartmentMode }: Props) {
   const [form, setForm] = useState({
     fullName: '',
     position: '',
-    department: 'Коммерческий отдел',
+    department: customDepartmentMode ? '__custom__' : 'Коммерческий отдел',
     duties: '',
     managerId: '' as string,
   });
+  const [customDepartment, setCustomDepartment] = useState('');
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    const department = form.department === '__custom__' ? customDepartment.trim() : form.department;
+    if (!department) {
+      setError('Укажите название направления');
+      return;
+    }
     try {
       await api.createEmployee({
         ...form,
+        department,
         managerId: form.managerId ? Number(form.managerId) : null,
       });
       onCreated();
@@ -68,11 +83,24 @@ export function AddEmployeeModal({ allEmployees, onClose, onCreated }: Props) {
             onChange={(e) => setForm({ ...form, department: e.target.value })}
             className="w-full border rounded-lg px-3 py-2.5 md:py-2 text-sm"
           >
-            <option>Руководство</option>
-            <option>Коммерческий отдел</option>
-            <option>Модерация и Суппорт</option>
-            <option>Финансовый Отдел</option>
+            {(() => {
+              const existingDepts = new Set(allEmployees.map((e) => e.department));
+              const allDepts = [...new Set([...DEFAULT_DEPARTMENTS, ...existingDepts])];
+              return allDepts.map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ));
+            })()}
+            <option value="__custom__">Другой...</option>
           </select>
+          {form.department === '__custom__' && (
+            <input
+              placeholder="Название нового направления"
+              value={customDepartment}
+              onChange={(e) => setCustomDepartment(e.target.value)}
+              className="w-full border rounded-lg px-3 py-2.5 md:py-2 text-sm"
+              required
+            />
+          )}
           <select
             value={form.managerId}
             onChange={(e) => setForm({ ...form, managerId: e.target.value })}

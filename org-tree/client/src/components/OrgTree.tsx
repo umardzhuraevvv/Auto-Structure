@@ -24,6 +24,18 @@ const DEPT_EDGE_COLORS: Record<string, string> = {
   'Финансовый Отдел': '#f59e0b',
 };
 
+const EXTRA_EDGE_COLORS = ['#ef4444', '#06b6d4', '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#84cc16', '#a855f7'];
+const edgeColorCache: Record<string, string> = {};
+
+function getEdgeColor(dept: string): string {
+  if (DEPT_EDGE_COLORS[dept]) return DEPT_EDGE_COLORS[dept];
+  if (!edgeColorCache[dept]) {
+    const usedCount = Object.keys(edgeColorCache).length;
+    edgeColorCache[dept] = EXTRA_EDGE_COLORS[usedCount % EXTRA_EDGE_COLORS.length];
+  }
+  return edgeColorCache[dept];
+}
+
 interface Props {
   employees: Employee[];
   highlightedId: number | null;
@@ -119,7 +131,7 @@ function layoutTree(
     });
 
     if (emp.managerId && visibleIds.has(emp.managerId)) {
-      const edgeColor = DEPT_EDGE_COLORS[emp.department] || '#94a3b8';
+      const edgeColor = getEdgeColor(emp.department);
       edges.push({
         id: `e-${emp.managerId}-${empId}`,
         source: String(emp.managerId),

@@ -9,6 +9,18 @@ const DEPT_COLORS: Record<string, string> = {
   'Финансовый Отдел': '#f59e0b',
 };
 
+const EXTRA_COLORS = ['#ef4444', '#06b6d4', '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#84cc16', '#a855f7'];
+const deptColorCache: Record<string, string> = {};
+
+function getDeptColor(dept: string): string {
+  if (DEPT_COLORS[dept]) return DEPT_COLORS[dept];
+  if (!deptColorCache[dept]) {
+    const usedCount = Object.keys(deptColorCache).length;
+    deptColorCache[dept] = EXTRA_COLORS[usedCount % EXTRA_COLORS.length];
+  }
+  return deptColorCache[dept];
+}
+
 interface Props {
   data: {
     fullName: string;
@@ -23,7 +35,7 @@ interface Props {
 }
 
 export const EmployeeCard = memo(({ data }: Props) => {
-  const color = DEPT_COLORS[data.department] || '#6b7280';
+  const color = getDeptColor(data.department);
 
   return (
     <div

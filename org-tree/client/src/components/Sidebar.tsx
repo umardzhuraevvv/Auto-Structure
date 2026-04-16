@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Search, Filter, ChevronDown, ChevronRight, Users, X } from 'lucide-react';
 import type { Employee } from '../types';
 
@@ -10,15 +10,11 @@ interface Props {
   onClose?: () => void;
 }
 
-const DEPARTMENTS = [
-  { label: 'Все', value: '' },
-  { label: 'Коммерческий отдел', value: 'Коммерческий отдел' },
-  { label: 'Модерация и Суппорт', value: 'Модерация и Суппорт' },
-  { label: 'Финансовый Отдел', value: 'Финансовый Отдел' },
-  { label: 'Руководство', value: 'Руководство' },
-];
-
 export function Sidebar({ employees, onSelect, onFilter, activeFilter, onClose }: Props) {
+  const departments = useMemo(() => {
+    const depts = [...new Set(employees.map((e) => e.department))].sort();
+    return [{ label: 'Все', value: '' }, ...depts.map((d) => ({ label: d, value: d }))];
+  }, [employees]);
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(true);
 
@@ -63,7 +59,7 @@ export function Sidebar({ employees, onSelect, onFilter, activeFilter, onClose }
         </button>
         {open && (
           <div className="flex flex-wrap gap-1 md:gap-1.5">
-            {DEPARTMENTS.map((d) => (
+            {departments.map((d) => (
               <button
                 key={d.value}
                 onClick={() => onFilter(d.value)}

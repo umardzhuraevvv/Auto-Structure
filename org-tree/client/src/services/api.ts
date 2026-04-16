@@ -31,6 +31,8 @@ export const api = {
     request(`/employees/${id}/move`, { method: 'PATCH', body: JSON.stringify({ managerId }) }),
   deleteEmployee: (id: number) =>
     request(`/employees/${id}`, { method: 'DELETE' }),
+  deleteBranch: (id: number) =>
+    request(`/employees/${id}/branch`, { method: 'DELETE' }),
 
   // Users
   getUsers: () => request('/users'),

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { TreePine, LogIn, LogOut, Settings, UserPlus, PanelLeftClose, PanelLeft, Menu, X } from 'lucide-react';
+import { TreePine, LogIn, LogOut, Settings, UserPlus, PanelLeftClose, PanelLeft, Menu, X, FolderPlus } from 'lucide-react';
 import { OrgTree } from './components/OrgTree';
 import { Sidebar } from './components/Sidebar';
 import { EmployeeModal } from './components/EmployeeModal';
@@ -17,6 +17,7 @@ export default function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showAddEmployee, setShowAddEmployee] = useState(false);
+  const [customDepartmentMode, setCustomDepartmentMode] = useState(false);
   const [deptFilter, setDeptFilter] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -98,10 +99,16 @@ export default function App() {
           {user && user.role === 'ADMIN' && (
             <>
               <button
-                onClick={() => setShowAddEmployee(true)}
+                onClick={() => { setCustomDepartmentMode(false); setShowAddEmployee(true); }}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
               >
                 <UserPlus size={14} /> Добавить
+              </button>
+              <button
+                onClick={() => { setCustomDepartmentMode(true); setShowAddEmployee(true); }}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700"
+              >
+                <FolderPlus size={14} /> Направление
               </button>
               <button
                 onClick={() => setShowAdmin(true)}
@@ -158,10 +165,16 @@ export default function App() {
           {user && user.role === 'ADMIN' && (
             <>
               <button
-                onClick={() => { setShowAddEmployee(true); setMobileMenuOpen(false); }}
+                onClick={() => { setCustomDepartmentMode(false); setShowAddEmployee(true); setMobileMenuOpen(false); }}
                 className="flex items-center gap-2 w-full px-3 py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
               >
                 <UserPlus size={16} /> Добавить сотрудника
+              </button>
+              <button
+                onClick={() => { setCustomDepartmentMode(true); setShowAddEmployee(true); setMobileMenuOpen(false); }}
+                className="flex items-center gap-2 w-full px-3 py-2.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700"
+              >
+                <FolderPlus size={16} /> Добавить направление
               </button>
               <button
                 onClick={() => { setShowAdmin(true); setMobileMenuOpen(false); }}
@@ -256,6 +269,7 @@ export default function App() {
           allEmployees={employees}
           onClose={() => setShowAddEmployee(false)}
           onCreated={loadEmployees}
+          customDepartmentMode={customDepartmentMode}
         />
       )}
     </div>
